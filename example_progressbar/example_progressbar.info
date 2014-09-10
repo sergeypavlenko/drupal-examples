@@ -1,3 +1,4 @@
 name = Example module "Progress bar".
 description = Simple example module.
+package = Example modules
 core = 7.x
