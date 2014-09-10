@@ -89,6 +89,7 @@ function example_progressbar_content_callback($form, &$form_state) {
   sleep(2);
   variable_set($variable_name, 90);
   sleep(2);
+  variable_del($variable_name);
 
   $commands[] = ajax_command_html('#execute-status', t('Executed.'));
 
