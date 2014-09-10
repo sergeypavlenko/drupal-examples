@@ -1,0 +1,97 @@
+<?php
+/**
+ * @file
+ * Example module "Progress bar".
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function example_progressbar_menu() {
+  $items['example_progressbar'] = array(
+    'title' => 'Progress bar example',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('example_progressbar_content'),
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['example_progressbar/progress/%'] = array(
+    'title' => 'Execute progress',
+    'page callback' => 'example_progressbar_content_progress',
+    'page arguments' => array(2),
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+}
+
+/**
+ * Implements hook_FORMID().
+ */
+function example_progressbar_content($form, &$form_state) {
+  $form_state['execute_time'] = REQUEST_TIME;
+
+    $form['execute_status'] = array(
+      '#markup' => "<div id="execute-status"></div>",
+    );
+
+    $form['submit'] = array(
+      '#type' => 'submit',
+      '#value' => t('Submit'),
+      '#ajax' => array(
+        'callback' => 'example_progressbar_content_callback',
+        'wrapper' => 'execute-form',
+        'progress' => array(
+          'type' => 'bar',
+          'message' => t('Execute..'),
+          'url' => url('example_progressbar/progress/' . $form_state['execute_time']),
+          'interval' => 1000,
+        ),
+      ),
+    );
+
+   return $form;
+}
+
+/**
+ * Get progress execute.
+ */
+function example_progressbar_content_callback($time) {
+  $progress = array(
+    'message' => t('Starting execute...'),
+    'percentage' => -1,
+  );
+
+  $completed_percentage = variable_get('example_progressbar_' . $time, 0);
+
+  if ($completed_percentage) {
+    $progress['message'] = t('Executing...');
+    $progress['percentage'] = $completed_percentage;
+  }
+
+  drupal_json_output($progress);
+}
+
+/**
+ * Execute code.
+ */
+function example_progressbar_content_callback($form, &$form_state) {
+  $variable_name = 'example_progressbar_' . $form_state['execute_time'];
+  $commands = array();
+
+  variable_set($variable_name, 10);
+  sleep(2);
+  variable_set($variable_name, 40);
+  sleep(2);
+  variable_set($variable_name, 70);
+  sleep(2);
+  variable_set($variable_name, 90);
+  sleep(2);
+
+  $commands[] = ajax_command_html('#execute-status', t('Executed.'));
+
+  return array(
+    '#type' => 'ajax',
+    '#commands' => $commands,
+  );
+}
